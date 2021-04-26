@@ -1,118 +1,142 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Webtorrent Video Player</title>
-    </head>
-    <body>
-        <h1>Download files using the WebTorrent protocol (BitTorrent over WebRTC).</h1>
-		
-	<div class="switch">Dark mode:
-            <button id="inner-switch">Toggle Dark</span>
-        </div>
+const dragDrop = require('drag-drop')
+const WebTorrent = require('webtorrent')
 
-    <form>
-      <label for="torrentId">Download from a magnet link: </label>
-      <input name="torrentId" type="text" placeholder="magnet:" value="magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F&xs=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel.torrent">
-      <button type="submit">Download</button>
+
+if (WebTorrent.WEBRTC_SUPPORT) {
+  console.log("WebRTC Supported")
+} else {
+  console.log("WebRTC Not Supported")
+}
+
+
+var client = new WebTorrent()
+
+client.on('error', function (err) {
+    console.error('ERROR: ' + err.message)
+})
+
+
+// When user drops files on the browser, create a new torrent and start seeding it!
+dragDrop(document.getElementById("drop_zone"), function (files) {
+  client.seed(files, function (torrent) {
+    console.log('Client is seeding ' + torrent.magnetURI)
+
+	displayUri(torrent.magnetURI)
+	
+	addVideo(torrent.files[0])
+	//torrent.files[0].appendTo('body')
+  })
+})
+
+document.querySelector('form').addEventListener('submit', function (e) {
+    e.preventDefault() // Prevent page refresh
+
+    var torrentId = document.querySelector('form input[name=torrentId]').value
+    //log('Adding ' + torrentId)
+    client.add(torrentId, onTorrent)
+	
+})
+
+function onTorrent (torrent) {
+		
+		
+/*log('Got torrent metadata!')
+log(
+    'Torrent info hash: ' + torrent.infoHash + ' ' +
+    '<a href="' + torrent.magnetURI + '" target="_blank">[Magnet URI]</a> ' +
+    '<a href="' + torrent.torrentFileBlobURL + '" target="_blank" download="' + torrent.name + '.torrent">[Download .torrent]</a>'
+    )*/
+	
+	
+	// Print out progress every 5 seconds
+	var interval = setInterval(function () {
+         displayProgress('Progress: ' + (torrent.progress * 100).toFixed(1) + '%')
+		 move()
+    }, 5000)
+
+    torrent.on('done', function () {
+		displayProgress("Done")
+      //  log('Progress: 100%')
+        clearInterval(interval)
+    })
+      // Render all files into to the page
+		
+	torrent.on('wire', function () {
+		displayPeers("There are " + torrent.numPeers + " peers")
+	})
+	
+		
+	var file = torrent.files.find(function(file) {
+		
+		return file.name.endsWith('.mp4')
+    })
+	
+	
+	addVideo(file)
+	//file.appendTo('body')
+	
+	
+}
 	  
-    </form>
-	<div id="drop_zone" >
-        <center>
-            <p style="inline-size: 50%;">Submit File to Seed</p>
-            <img id="image" src="submit.png">
-        </center>
-      </div>
-	
-	
-	<hl>Copy the MagnetURI to share this video.</h1>
-	<div class="uri"></div>
-	
-	<h2>Download Progress</h2>
-	<div class="progress"></div>
-	
-	<div id="myProgress">
-        <div id="myBar"></div>
-    </div>
-	
-	<h3>Torrent Data</h3>
-	<div class="torrentData"></div>
-	
-	<div class="peers"></div>
-	
-			
+function displayUri(str) {
+	var p = document.createElement('p')
+	p.innerHTML = str
+	document.querySelector('.uri').appendChild(p)
+}
+
+function displayProgress(str) {
+	var p = document.createElement('p')
+	p.innerHTML = str
+	document.querySelector('.progress').appendChild(p)
+}
+
+function displayTorrentData(str) {
+	var p = document.createElement('p')
+	p.innerHTML = str
+	document.querySelector('.torrentData').appendChild(p)
+}
+
+function displayPeers(str) {
+	var p = document.createElement('p')
+	p.innerHTML = str
+	document.querySelector('.peers').appendChild(p)
+}
+
+
+function move() {
+            if ((torrent.progress*100).toFixed(1) == 0) {
+                //i = 1;
+                var elem = document.getElementById("myBar");
+                var width = 1;
+                var id = setInterval(frame, 10);
+                function frame() {
+                  if (width >= 100) {
+                      clearInterval(id);
+                      i = 0;
+                  } else {
+                      //width++;
+                      elem.style.width = width + "%";
+                  }
+                }
+            }
+        }
 		
-    </body>
-    <script src="bundle.js">
-
-    </script>
-	
-	<style>
-	
-	button {
-    color: #444444;
-    background: #F3F3F3;
-    border: 1px #DADADA solid;
-    padding: 12px 20px;
-    margin: 8px 0;
-    border-radius: 2px;
-    font-weight: bold;
-    font-size: 9pt;
-    outline: none;
-	}
-
-	button:hover {
-    border: 1px #C6C6C6 solid;
-    box-shadow: 1px 1px 1px #EAEAEA;
-    color: #333333;
-    background: #F7F7F7;
-	}
-
-	button:active {
-    box-shadow: inset 1px 1px 1px #DFDFDF;
-	}
-
-	input[type=text] {
-    padding: 12px 20px;
-    margin: 8px 0;
-    box-sizing: border-box;
-    border: 2px solid red;
-    border-radius: 4px;
+var isVideo = false
+		
+function addVideo(file){
+	if(!isVideo){
+		displayTorrentData('Now Playing "' + file.name +
+		'"')
+		displayTorrentData("Refresh page to play new video.")
+		file.appendTo('body')
+		isVideo = true
+		
+		
 	}
 	
-	#myProgress {
-    width: 100%;
-    background-color: grey;
-	}
+}
 
-	#myBar {
-    width: 1%;
-    height: 30px;
-    background-color: green;
-	}
-	
-	body {
-    padding: 25px;
-    background-color: white;
-    color: black;
-    font-size: 25px;
-  }
-
-  .dark-mode {
-    background-color: #223838;
-    color: #DCDCDC;
-  }
-
-  #drop_zone {
-    border: 1px solid #223838;
-    width:  600px;
-    height: 400px;
-  }
-  #image{
-    width: 20%;
-    height: 20%;
-    opacity: 0.25;
-  }
-	</style>
-  
-</html>
+document.getElementById("inner-switch").onclick = function() {
+        var element = document.body;
+         element.classList.toggle("dark-mode");
+      }
