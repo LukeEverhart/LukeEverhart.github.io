@@ -9132,6 +9132,149 @@ function extend() {
 }
 
 },{}],40:[function(require,module,exports){
+const dragDrop = require('drag-drop')
+const WebTorrent = require('webtorrent')
+
+
+if (WebTorrent.WEBRTC_SUPPORT) {
+  console.log("WebRTC Supported")
+} else {
+  console.log("WebRTC Not Supported")
+}
+
+
+var client = new WebTorrent()
+
+client.on('error', function (err) {
+    console.error('ERROR: ' + err.message)
+})
+
+
+// When user drops files on the browser, create a new torrent and start seeding it!
+dragDrop(document.getElementById("drop_zone"), function (files) {
+  client.seed(files, function (torrent) {
+    console.log('Client is seeding ' + torrent.magnetURI)
+
+	displayUri(torrent.magnetURI)
+	
+	addVideo(torrent.files[0])
+	//torrent.files[0].appendTo('body')
+  })
+})
+
+document.querySelector('form').addEventListener('submit', function (e) {
+    e.preventDefault() // Prevent page refresh
+
+    var torrentId = document.querySelector('form input[name=torrentId]').value
+    //log('Adding ' + torrentId)
+    client.add(torrentId, onTorrent)
+	
+})
+
+function onTorrent (torrent) {
+		
+		
+/*log('Got torrent metadata!')
+log(
+    'Torrent info hash: ' + torrent.infoHash + ' ' +
+    '<a href="' + torrent.magnetURI + '" target="_blank">[Magnet URI]</a> ' +
+    '<a href="' + torrent.torrentFileBlobURL + '" target="_blank" download="' + torrent.name + '.torrent">[Download .torrent]</a>'
+    )*/
+	
+	
+	// Print out progress every 5 seconds
+	var interval = setInterval(function () {
+         displayProgress('Progress: ' + (torrent.progress * 100).toFixed(1) + '%')
+		 move()
+    }, 5000)
+
+    torrent.on('done', function () {
+		displayProgress("Done")
+      //  log('Progress: 100%')
+        clearInterval(interval)
+    })
+      // Render all files into to the page
+		
+	torrent.on('wire', function () {
+		displayPeers("There are " + torrent.numPeers + " peers")
+	})
+	
+		
+	var file = torrent.files.find(function(file) {
+		
+		return file.name.endsWith('.mp4')
+    })
+	
+	
+	addVideo(file)
+	//file.appendTo('body')
+	
+	
+}
+	  
+function displayUri(str) {
+	var p = document.createElement('p')
+	p.innerHTML = str
+	document.querySelector('.uri').appendChild(p)
+}
+
+function displayProgress(str) {
+	var p = document.createElement('p')
+	p.innerHTML = str
+	document.querySelector('.progress').appendChild(p)
+}
+
+function displayTorrentData(str) {
+	var p = document.createElement('p')
+	p.innerHTML = str
+	document.querySelector('.torrentData').appendChild(p)
+}
+
+function displayPeers(str) {
+	var p = document.createElement('p')
+	p.innerHTML = str
+	document.querySelector('.peers').appendChild(p)
+}
+
+
+function move() {
+            if ((torrent.progress*100).toFixed(1) == 0) {
+                //i = 1;
+                var elem = document.getElementById("myBar");
+                var width = 1;
+                var id = setInterval(frame, 10);
+                function frame() {
+                  if (width >= 100) {
+                      clearInterval(id);
+                      i = 0;
+                  } else {
+                      //width++;
+                      elem.style.width = width + "%";
+                  }
+                }
+            }
+        }
+		
+var isVideo = false
+		
+function addVideo(file){
+	if(!isVideo){
+		displayTorrentData('Now Playing "' + file.name +
+		'"')
+		displayTorrentData("Refresh page to play new video.")
+		file.appendTo('body')
+		isVideo = true
+		
+		
+	}
+	
+}
+
+document.getElementById("inner-switch").onclick = function() {
+        var element = document.body;
+         element.classList.toggle("dark-mode");
+      }
+},{"drag-drop":63,"webtorrent":138}],41:[function(require,module,exports){
 const ADDR_RE = /^\[?([^\]]+)\]?:(\d+)$/ // ipv4/ipv6/hostname + port
 
 let cache = {}
@@ -9156,7 +9299,7 @@ module.exports.reset = function reset () {
   size = 0
 }
 
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 var Buffer = require('safe-buffer').Buffer
 
 const INTEGER_START = 0x69 // 'i'
@@ -9328,7 +9471,7 @@ decode.buffer = function () {
 
 module.exports = decode
 
-},{"safe-buffer":113}],42:[function(require,module,exports){
+},{"safe-buffer":114}],43:[function(require,module,exports){
 var Buffer = require('safe-buffer').Buffer
 
 /**
@@ -9445,7 +9588,7 @@ encode.list = function (buffers, data) {
 
 module.exports = encode
 
-},{"safe-buffer":113}],43:[function(require,module,exports){
+},{"safe-buffer":114}],44:[function(require,module,exports){
 var bencode = module.exports
 
 bencode.encode = require('./encode')
@@ -9461,7 +9604,7 @@ bencode.byteLength = bencode.encodingLength = function (value) {
   return bencode.encode(value).length
 }
 
-},{"./decode":41,"./encode":42}],44:[function(require,module,exports){
+},{"./decode":42,"./encode":43}],45:[function(require,module,exports){
 module.exports = parseRange
 module.exports.parse = parseRange
 module.exports.compose = composeRange
@@ -9488,7 +9631,7 @@ function parseRange (range) {
     }, [])
 }
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 module.exports = function(haystack, needle, comparator, low, high) {
   var mid, cmp;
 
@@ -9535,7 +9678,7 @@ module.exports = function(haystack, needle, comparator, low, high) {
   return ~low;
 }
 
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function getByteSize(num) {
@@ -9615,7 +9758,7 @@ var BitField = /** @class */ (function () {
 }());
 exports.default = BitField;
 
-},{}],47:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! bittorrent-protocol. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 const arrayRemove = require('unordered-array-remove')
@@ -10379,7 +10522,7 @@ class Wire extends stream.Duplex {
 module.exports = Wire
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"bencode":43,"bitfield":46,"buffer":3,"debug":60,"randombytes":91,"readable-stream":107,"speedometer":120,"unordered-array-remove":132}],48:[function(require,module,exports){
+},{"bencode":44,"bitfield":47,"buffer":3,"debug":61,"randombytes":92,"readable-stream":108,"speedometer":121,"unordered-array-remove":133}],49:[function(require,module,exports){
 (function (process,Buffer){(function (){
 const debug = require('debug')('bittorrent-tracker:client')
 const EventEmitter = require('events')
@@ -10675,7 +10818,7 @@ Client.scrape = (opts, cb) => {
 module.exports = Client
 
 }).call(this)}).call(this,require('_process'),require("buffer").Buffer)
-},{"./lib/client/http-tracker":2,"./lib/client/udp-tracker":2,"./lib/client/websocket-tracker":50,"./lib/common":51,"_process":10,"buffer":3,"debug":60,"events":5,"once":85,"queue-microtask":89,"run-parallel":111,"simple-peer":116}],49:[function(require,module,exports){
+},{"./lib/client/http-tracker":2,"./lib/client/udp-tracker":2,"./lib/client/websocket-tracker":51,"./lib/common":52,"_process":10,"buffer":3,"debug":61,"events":5,"once":86,"queue-microtask":90,"run-parallel":112,"simple-peer":117}],50:[function(require,module,exports){
 const EventEmitter = require('events')
 
 class Tracker extends EventEmitter {
@@ -10705,7 +10848,7 @@ class Tracker extends EventEmitter {
 
 module.exports = Tracker
 
-},{"events":5}],50:[function(require,module,exports){
+},{"events":5}],51:[function(require,module,exports){
 const debug = require('debug')('bittorrent-tracker:websocket-tracker')
 const Peer = require('simple-peer')
 const randombytes = require('randombytes')
@@ -11141,7 +11284,7 @@ function noop () {}
 
 module.exports = WebSocketTracker
 
-},{"../common":51,"./tracker":49,"debug":60,"randombytes":91,"simple-peer":116,"simple-websocket":119}],51:[function(require,module,exports){
+},{"../common":52,"./tracker":50,"debug":61,"randombytes":92,"simple-peer":117,"simple-websocket":120}],52:[function(require,module,exports){
 (function (Buffer){(function (){
 /**
  * Functions/constants needed by both the client and server.
@@ -11168,7 +11311,7 @@ const config = require('./common-node')
 Object.assign(exports, config)
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"./common-node":2,"buffer":3}],52:[function(require,module,exports){
+},{"./common-node":2,"buffer":3}],53:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! blob-to-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* global Blob, FileReader */
@@ -11194,7 +11337,7 @@ module.exports = function blobToBuffer (blob, cb) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3}],53:[function(require,module,exports){
+},{"buffer":3}],54:[function(require,module,exports){
 (function (Buffer){(function (){
 const { Transform } = require('readable-stream')
 
@@ -11267,7 +11410,7 @@ class Block extends Transform {
 module.exports = Block
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3,"readable-stream":107}],54:[function(require,module,exports){
+},{"buffer":3,"readable-stream":108}],55:[function(require,module,exports){
 (function (Buffer){(function (){
 function allocUnsafe (size) {
   if (typeof size !== 'number') {
@@ -11288,7 +11431,7 @@ function allocUnsafe (size) {
 module.exports = allocUnsafe
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3}],55:[function(require,module,exports){
+},{"buffer":3}],56:[function(require,module,exports){
 (function (Buffer){(function (){
 var bufferFill = require('buffer-fill')
 var allocUnsafe = require('buffer-alloc-unsafe')
@@ -11324,7 +11467,7 @@ module.exports = function alloc (size, fill, encoding) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3,"buffer-alloc-unsafe":54,"buffer-fill":56}],56:[function(require,module,exports){
+},{"buffer":3,"buffer-alloc-unsafe":55,"buffer-fill":57}],57:[function(require,module,exports){
 (function (Buffer){(function (){
 /* Node.js 6.4.0 and up has full support */
 var hasFullSupport = (function () {
@@ -11441,7 +11584,7 @@ function fill (buffer, val, start, end, encoding) {
 module.exports = fill
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3}],57:[function(require,module,exports){
+},{"buffer":3}],58:[function(require,module,exports){
 const BlockStream = require('block-stream2')
 const stream = require('readable-stream')
 
@@ -11510,7 +11653,7 @@ class ChunkStoreWriteStream extends stream.Writable {
 
 module.exports = ChunkStoreWriteStream
 
-},{"block-stream2":53,"readable-stream":107}],58:[function(require,module,exports){
+},{"block-stream2":54,"readable-stream":108}],59:[function(require,module,exports){
 module.exports = function cpus () {
   var num = navigator.hardwareConcurrency || 1
   var cpus = []
@@ -11524,7 +11667,7 @@ module.exports = function cpus () {
   return cpus
 }
 
-},{}],59:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 (function (global,Buffer){(function (){
 /*! create-torrent. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 const bencode = require('bencode')
@@ -11993,7 +12136,7 @@ module.exports.announceList = announceList
 module.exports.isJunkPath = isJunkPath
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./get-files":2,"bencode":43,"block-stream2":53,"buffer":3,"filestream/read":65,"is-file":2,"junk":71,"multistream":83,"once":85,"path":9,"piece-length":87,"queue-microtask":89,"readable-stream":107,"run-parallel":111,"simple-sha1":117}],60:[function(require,module,exports){
+},{"./get-files":2,"bencode":44,"block-stream2":54,"buffer":3,"filestream/read":66,"is-file":2,"junk":72,"multistream":84,"once":86,"path":9,"piece-length":88,"queue-microtask":90,"readable-stream":108,"run-parallel":112,"simple-sha1":118}],61:[function(require,module,exports){
 (function (process){(function (){
 /* eslint-env browser */
 
@@ -12266,7 +12409,7 @@ formatters.j = function (v) {
 };
 
 }).call(this)}).call(this,require('_process'))
-},{"./common":61,"_process":10}],61:[function(require,module,exports){
+},{"./common":62,"_process":10}],62:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -12529,7 +12672,7 @@ function setup(env) {
 
 module.exports = setup;
 
-},{"ms":82}],62:[function(require,module,exports){
+},{"ms":83}],63:[function(require,module,exports){
 /*! drag-drop. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 module.exports = dragDrop
 
@@ -12776,7 +12919,7 @@ function processEntry (entry, cb) {
   }
 }
 
-},{"run-parallel":111}],63:[function(require,module,exports){
+},{"run-parallel":112}],64:[function(require,module,exports){
 (function (process){(function (){
 var once = require('once');
 
@@ -12874,7 +13017,7 @@ var eos = function(stream, opts, callback) {
 module.exports = eos;
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":10,"once":85}],64:[function(require,module,exports){
+},{"_process":10,"once":86}],65:[function(require,module,exports){
 'use strict';
 
 /**
@@ -12945,7 +13088,7 @@ function createError(err, code, props) {
 
 module.exports = createError;
 
-},{}],65:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 /* global FileReader */
 
 const { Readable } = require('readable-stream')
@@ -13031,7 +13174,7 @@ class FileReadStream extends Readable {
 
 module.exports = FileReadStream
 
-},{"readable-stream":107,"typedarray-to-buffer":130}],66:[function(require,module,exports){
+},{"readable-stream":108,"typedarray-to-buffer":131}],67:[function(require,module,exports){
 // originally pulled out of simple-peer
 
 module.exports = function getBrowserRTC () {
@@ -13048,7 +13191,7 @@ module.exports = function getBrowserRTC () {
   return wrtc
 }
 
-},{}],67:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 /*! immediate-chunk-store. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 // TODO: remove when window.queueMicrotask() is well supported
 const queueMicrotask = require('queue-microtask')
@@ -13107,9 +13250,9 @@ class ImmediateStore {
 
 module.exports = ImmediateStore
 
-},{"queue-microtask":89}],68:[function(require,module,exports){
+},{"queue-microtask":90}],69:[function(require,module,exports){
 arguments[4][8][0].apply(exports,arguments)
-},{"dup":8}],69:[function(require,module,exports){
+},{"dup":8}],70:[function(require,module,exports){
 /* (c) 2016 Ari Porad (@ariporad) <http://ariporad.com>. License: ariporad.mit-license.org */
 
 // Partially from http://stackoverflow.com/a/94049/1928484, and from another SO answer, which told me that the highest
@@ -13124,7 +13267,7 @@ module.exports = function isAscii(str) {
   return true;
 };
 
-},{}],70:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 module.exports      = isTypedArray
 isTypedArray.strict = isStrictTypedArray
 isTypedArray.loose  = isLooseTypedArray
@@ -13167,7 +13310,7 @@ function isLooseTypedArray(arr) {
   return names[toString.call(arr)]
 }
 
-},{}],71:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 'use strict';
 
 const blacklist = [
@@ -13208,7 +13351,7 @@ exports.not = filename => !exports.is(filename);
 // TODO: Remove this for the next major release
 exports.default = module.exports;
 
-},{}],72:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! lt_donthave. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 const arrayRemove = require('unordered-array-remove')
@@ -13275,7 +13418,7 @@ module.exports = () => {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3,"debug":60,"events":5,"unordered-array-remove":132}],73:[function(require,module,exports){
+},{"buffer":3,"debug":61,"events":5,"unordered-array-remove":133}],74:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! magnet-uri. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 module.exports = magnetURIDecode
@@ -13442,7 +13585,7 @@ function magnetURIEncode (obj) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"bep53-range":44,"buffer":3,"thirty-two":125}],74:[function(require,module,exports){
+},{"bep53-range":45,"buffer":3,"thirty-two":126}],75:[function(require,module,exports){
 /*! mediasource. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 module.exports = MediaElementWrapper
 
@@ -13734,7 +13877,7 @@ function downloadBuffers (bufs, name) {
   a.click()
 }
 
-},{"inherits":68,"readable-stream":107,"to-arraybuffer":127}],75:[function(require,module,exports){
+},{"inherits":69,"readable-stream":108,"to-arraybuffer":128}],76:[function(require,module,exports){
 module.exports = Storage
 
 const queueMicrotask = require('queue-microtask')
@@ -13803,7 +13946,7 @@ function nextTick (cb, err, val) {
   })
 }
 
-},{"queue-microtask":89}],76:[function(require,module,exports){
+},{"queue-microtask":90}],77:[function(require,module,exports){
 (function (Buffer){(function (){
 // This is an intentionally recursive require. I don't like it either.
 var Box = require('./index')
@@ -14815,7 +14958,7 @@ function readString (buf, offset, length) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"./descriptor":77,"./index":78,"buffer":3,"uint64be":131}],77:[function(require,module,exports){
+},{"./descriptor":78,"./index":79,"buffer":3,"uint64be":132}],78:[function(require,module,exports){
 (function (Buffer){(function (){
 var tagToName = {
   0x03: 'ESDescriptor',
@@ -14891,7 +15034,7 @@ exports.DecoderConfigDescriptor.decode = function (buf, start, end) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3}],78:[function(require,module,exports){
+},{"buffer":3}],79:[function(require,module,exports){
 (function (Buffer){(function (){
 // var assert = require('assert')
 var uint64be = require('uint64be')
@@ -15120,7 +15263,7 @@ Box.encodingLength = function (obj) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"./boxes":76,"buffer":3,"uint64be":131}],79:[function(require,module,exports){
+},{"./boxes":77,"buffer":3,"uint64be":132}],80:[function(require,module,exports){
 (function (Buffer){(function (){
 var stream = require('readable-stream')
 var nextEvent = require('next-event')
@@ -15310,7 +15453,7 @@ class MediaData extends stream.PassThrough {
 module.exports = Decoder
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3,"mp4-box-encoding":78,"next-event":84,"readable-stream":107}],80:[function(require,module,exports){
+},{"buffer":3,"mp4-box-encoding":79,"next-event":85,"readable-stream":108}],81:[function(require,module,exports){
 (function (Buffer){(function (){
 var stream = require('readable-stream')
 var Box = require('mp4-box-encoding')
@@ -15449,14 +15592,14 @@ class MediaData extends stream.PassThrough {
 module.exports = Encoder
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3,"mp4-box-encoding":78,"queue-microtask":89,"readable-stream":107}],81:[function(require,module,exports){
+},{"buffer":3,"mp4-box-encoding":79,"queue-microtask":90,"readable-stream":108}],82:[function(require,module,exports){
 const Decoder = require('./decode')
 const Encoder = require('./encode')
 
 exports.decode = opts => new Decoder(opts)
 exports.encode = opts => new Encoder(opts)
 
-},{"./decode":79,"./encode":80}],82:[function(require,module,exports){
+},{"./decode":80,"./encode":81}],83:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -15620,7 +15763,7 @@ function plural(ms, msAbs, n, name) {
   return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
 }
 
-},{}],83:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 /*! multistream. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 const stream = require('readable-stream')
 const once = require('once')
@@ -15788,7 +15931,7 @@ function destroy (stream, err, cb) {
   }
 }
 
-},{"once":85,"readable-stream":107}],84:[function(require,module,exports){
+},{"once":86,"readable-stream":108}],85:[function(require,module,exports){
 module.exports = nextEvent
 
 function nextEvent (emitter, name) {
@@ -15805,7 +15948,7 @@ function nextEvent (emitter, name) {
   }
 }
 
-},{}],85:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 var wrappy = require('wrappy')
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
@@ -15849,7 +15992,7 @@ function onceStrict (fn) {
   return f
 }
 
-},{"wrappy":145}],86:[function(require,module,exports){
+},{"wrappy":146}],87:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! parse-torrent. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 /* global Blob */
@@ -16122,14 +16265,14 @@ function ensure (bool, fieldName) {
 ;(() => { Buffer.alloc(0) })()
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"bencode":43,"blob-to-buffer":52,"buffer":3,"fs":2,"magnet-uri":73,"path":9,"queue-microtask":89,"simple-get":115,"simple-sha1":117}],87:[function(require,module,exports){
+},{"bencode":44,"blob-to-buffer":53,"buffer":3,"fs":2,"magnet-uri":74,"path":9,"queue-microtask":90,"simple-get":116,"simple-sha1":118}],88:[function(require,module,exports){
 module.exports = length
 
 function length (bytes) {
   return Math.max(16384, 1 << Math.log2(bytes < 1024 ? 1 : bytes / 1024) + 0.5 | 0)
 }
 
-},{}],88:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 (function (process){(function (){
 var once = require('once')
 var eos = require('end-of-stream')
@@ -16215,7 +16358,7 @@ var pump = function () {
 module.exports = pump
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":10,"end-of-stream":63,"fs":2,"once":85}],89:[function(require,module,exports){
+},{"_process":10,"end-of-stream":64,"fs":2,"once":86}],90:[function(require,module,exports){
 (function (global){(function (){
 /*! queue-microtask. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 let promise
@@ -16228,7 +16371,7 @@ module.exports = typeof queueMicrotask === 'function'
     .catch(err => setTimeout(() => { throw err }, 0))
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],90:[function(require,module,exports){
+},{}],91:[function(require,module,exports){
 var iterate = function (list) {
   var offset = 0
   return function () {
@@ -16249,7 +16392,7 @@ var iterate = function (list) {
 
 module.exports = iterate
 
-},{}],91:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 (function (process,global){(function (){
 'use strict'
 
@@ -16303,7 +16446,7 @@ function randomBytes (size, cb) {
 }
 
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":10,"safe-buffer":113}],92:[function(require,module,exports){
+},{"_process":10,"safe-buffer":114}],93:[function(require,module,exports){
 /*
 Instance of writable stream.
 
@@ -16420,37 +16563,37 @@ class RangeSliceStream extends Writable {
 
 module.exports = RangeSliceStream
 
-},{"readable-stream":107}],93:[function(require,module,exports){
+},{"readable-stream":108}],94:[function(require,module,exports){
 arguments[4][20][0].apply(exports,arguments)
-},{"dup":20}],94:[function(require,module,exports){
+},{"dup":20}],95:[function(require,module,exports){
 arguments[4][21][0].apply(exports,arguments)
-},{"./_stream_readable":96,"./_stream_writable":98,"_process":10,"dup":21,"inherits":68}],95:[function(require,module,exports){
+},{"./_stream_readable":97,"./_stream_writable":99,"_process":10,"dup":21,"inherits":69}],96:[function(require,module,exports){
 arguments[4][22][0].apply(exports,arguments)
-},{"./_stream_transform":97,"dup":22,"inherits":68}],96:[function(require,module,exports){
+},{"./_stream_transform":98,"dup":22,"inherits":69}],97:[function(require,module,exports){
 arguments[4][23][0].apply(exports,arguments)
-},{"../errors":93,"./_stream_duplex":94,"./internal/streams/async_iterator":99,"./internal/streams/buffer_list":100,"./internal/streams/destroy":101,"./internal/streams/from":103,"./internal/streams/state":105,"./internal/streams/stream":106,"_process":10,"buffer":3,"dup":23,"events":5,"inherits":68,"string_decoder/":124,"util":2}],97:[function(require,module,exports){
+},{"../errors":94,"./_stream_duplex":95,"./internal/streams/async_iterator":100,"./internal/streams/buffer_list":101,"./internal/streams/destroy":102,"./internal/streams/from":104,"./internal/streams/state":106,"./internal/streams/stream":107,"_process":10,"buffer":3,"dup":23,"events":5,"inherits":69,"string_decoder/":125,"util":2}],98:[function(require,module,exports){
 arguments[4][24][0].apply(exports,arguments)
-},{"../errors":93,"./_stream_duplex":94,"dup":24,"inherits":68}],98:[function(require,module,exports){
+},{"../errors":94,"./_stream_duplex":95,"dup":24,"inherits":69}],99:[function(require,module,exports){
 arguments[4][25][0].apply(exports,arguments)
-},{"../errors":93,"./_stream_duplex":94,"./internal/streams/destroy":101,"./internal/streams/state":105,"./internal/streams/stream":106,"_process":10,"buffer":3,"dup":25,"inherits":68,"util-deprecate":134}],99:[function(require,module,exports){
+},{"../errors":94,"./_stream_duplex":95,"./internal/streams/destroy":102,"./internal/streams/state":106,"./internal/streams/stream":107,"_process":10,"buffer":3,"dup":25,"inherits":69,"util-deprecate":135}],100:[function(require,module,exports){
 arguments[4][26][0].apply(exports,arguments)
-},{"./end-of-stream":102,"_process":10,"dup":26}],100:[function(require,module,exports){
+},{"./end-of-stream":103,"_process":10,"dup":26}],101:[function(require,module,exports){
 arguments[4][27][0].apply(exports,arguments)
-},{"buffer":3,"dup":27,"util":2}],101:[function(require,module,exports){
+},{"buffer":3,"dup":27,"util":2}],102:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"_process":10,"dup":28}],102:[function(require,module,exports){
+},{"_process":10,"dup":28}],103:[function(require,module,exports){
 arguments[4][29][0].apply(exports,arguments)
-},{"../../../errors":93,"dup":29}],103:[function(require,module,exports){
+},{"../../../errors":94,"dup":29}],104:[function(require,module,exports){
 arguments[4][30][0].apply(exports,arguments)
-},{"dup":30}],104:[function(require,module,exports){
+},{"dup":30}],105:[function(require,module,exports){
 arguments[4][31][0].apply(exports,arguments)
-},{"../../../errors":93,"./end-of-stream":102,"dup":31}],105:[function(require,module,exports){
+},{"../../../errors":94,"./end-of-stream":103,"dup":31}],106:[function(require,module,exports){
 arguments[4][32][0].apply(exports,arguments)
-},{"../../../errors":93,"dup":32}],106:[function(require,module,exports){
+},{"../../../errors":94,"dup":32}],107:[function(require,module,exports){
 arguments[4][33][0].apply(exports,arguments)
-},{"dup":33,"events":5}],107:[function(require,module,exports){
+},{"dup":33,"events":5}],108:[function(require,module,exports){
 arguments[4][34][0].apply(exports,arguments)
-},{"./lib/_stream_duplex.js":94,"./lib/_stream_passthrough.js":95,"./lib/_stream_readable.js":96,"./lib/_stream_transform.js":97,"./lib/_stream_writable.js":98,"./lib/internal/streams/end-of-stream.js":102,"./lib/internal/streams/pipeline.js":104,"dup":34}],108:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":95,"./lib/_stream_passthrough.js":96,"./lib/_stream_readable.js":97,"./lib/_stream_transform.js":98,"./lib/_stream_writable.js":99,"./lib/internal/streams/end-of-stream.js":103,"./lib/internal/streams/pipeline.js":105,"dup":34}],109:[function(require,module,exports){
 /*! render-media. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.render = render
 exports.append = append
@@ -16851,7 +16994,7 @@ function setMediaOpts (elem, opts) {
   elem.controls = !!opts.controls
 }
 
-},{"./lib/mime.json":109,"debug":60,"is-ascii":69,"mediasource":74,"path":9,"stream-to-blob-url":121,"videostream":136}],109:[function(require,module,exports){
+},{"./lib/mime.json":110,"debug":61,"is-ascii":70,"mediasource":75,"path":9,"stream-to-blob-url":122,"videostream":137}],110:[function(require,module,exports){
 module.exports={
   ".3gp": "video/3gpp",
   ".aac": "audio/aac",
@@ -16936,7 +17079,7 @@ module.exports={
   ".zip": "application/zip"
 }
 
-},{}],110:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 /*! run-parallel-limit. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 module.exports = runParallelLimit
 
@@ -17008,7 +17151,7 @@ function runParallelLimit (tasks, limit, cb) {
   isSync = false
 }
 
-},{"queue-microtask":89}],111:[function(require,module,exports){
+},{"queue-microtask":90}],112:[function(require,module,exports){
 /*! run-parallel. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 module.exports = runParallel
 
@@ -17061,7 +17204,7 @@ function runParallel (tasks, cb) {
   isSync = false
 }
 
-},{"queue-microtask":89}],112:[function(require,module,exports){
+},{"queue-microtask":90}],113:[function(require,module,exports){
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -17990,9 +18133,9 @@ module.exports = function () {
 /***/ })
 /******/ ]);
 });
-},{}],113:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 arguments[4][15][0].apply(exports,arguments)
-},{"buffer":3,"dup":15}],114:[function(require,module,exports){
+},{"buffer":3,"dup":15}],115:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! simple-concat. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 module.exports = function (stream, cb) {
@@ -18011,7 +18154,7 @@ module.exports = function (stream, cb) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3}],115:[function(require,module,exports){
+},{"buffer":3}],116:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! simple-get. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 module.exports = simpleGet
@@ -18115,7 +18258,7 @@ simpleGet.concat = (opts, cb) => {
 })
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3,"decompress-response":2,"http":16,"https":6,"once":85,"querystring":14,"simple-concat":114,"url":36}],116:[function(require,module,exports){
+},{"buffer":3,"decompress-response":2,"http":16,"https":6,"once":86,"querystring":14,"simple-concat":115,"url":36}],117:[function(require,module,exports){
 /*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 const debug = require('debug')('simple-peer')
 const getBrowserRTC = require('get-browser-rtc')
@@ -19169,7 +19312,7 @@ Peer.channelConfig = {}
 
 module.exports = Peer
 
-},{"buffer":3,"debug":60,"err-code":64,"get-browser-rtc":66,"queue-microtask":89,"randombytes":91,"readable-stream":107}],117:[function(require,module,exports){
+},{"buffer":3,"debug":61,"err-code":65,"get-browser-rtc":67,"queue-microtask":90,"randombytes":92,"readable-stream":108}],118:[function(require,module,exports){
 /* global self */
 
 const Rusha = require('rusha')
@@ -19247,7 +19390,7 @@ function hex (buf) {
 module.exports = sha1
 module.exports.sync = sha1sync
 
-},{"./rusha-worker-sha1":118,"rusha":112}],118:[function(require,module,exports){
+},{"./rusha-worker-sha1":119,"rusha":113}],119:[function(require,module,exports){
 const Rusha = require('rusha')
 
 let worker
@@ -19282,7 +19425,7 @@ function sha1 (buf, cb) {
 
 module.exports = sha1
 
-},{"rusha":112}],119:[function(require,module,exports){
+},{"rusha":113}],120:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! simple-websocket. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* global WebSocket */
@@ -19545,7 +19688,7 @@ Socket.WEBSOCKET_SUPPORT = !!_WebSocket
 module.exports = Socket
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3,"debug":60,"queue-microtask":89,"randombytes":91,"readable-stream":107,"ws":2}],120:[function(require,module,exports){
+},{"buffer":3,"debug":61,"queue-microtask":90,"randombytes":92,"readable-stream":108,"ws":2}],121:[function(require,module,exports){
 var tick = 1
 var maxTick = 65535
 var resolution = 4
@@ -19586,7 +19729,7 @@ module.exports = function (seconds) {
   }
 }
 
-},{}],121:[function(require,module,exports){
+},{}],122:[function(require,module,exports){
 /*! stream-to-blob-url. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 module.exports = getBlobURL
 
@@ -19598,7 +19741,7 @@ async function getBlobURL (stream, mimeType) {
   return url
 }
 
-},{"stream-to-blob":122}],122:[function(require,module,exports){
+},{"stream-to-blob":123}],123:[function(require,module,exports){
 /*! stream-to-blob. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* global Blob */
 
@@ -19622,7 +19765,7 @@ function streamToBlob (stream, mimeType) {
   })
 }
 
-},{}],123:[function(require,module,exports){
+},{}],124:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! stream-with-known-length-to-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 var once = require('once')
@@ -19641,9 +19784,9 @@ module.exports = function getBuffer (stream, length, cb) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3,"once":85}],124:[function(require,module,exports){
+},{"buffer":3,"once":86}],125:[function(require,module,exports){
 arguments[4][35][0].apply(exports,arguments)
-},{"dup":35,"safe-buffer":113}],125:[function(require,module,exports){
+},{"dup":35,"safe-buffer":114}],126:[function(require,module,exports){
 /*                                                                              
 Copyright (c) 2011, Chris Umbel
 
@@ -19671,7 +19814,7 @@ var base32 = require('./thirty-two');
 exports.encode = base32.encode;
 exports.decode = base32.decode;
 
-},{"./thirty-two":126}],126:[function(require,module,exports){
+},{"./thirty-two":127}],127:[function(require,module,exports){
 (function (Buffer){(function (){
 /*
 Copyright (c) 2011, Chris Umbel
@@ -19803,7 +19946,7 @@ exports.decode = function(encoded) {
 };
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3}],127:[function(require,module,exports){
+},{"buffer":3}],128:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -19832,7 +19975,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":3}],128:[function(require,module,exports){
+},{"buffer":3}],129:[function(require,module,exports){
 (function (process){(function (){
 /*! torrent-discovery. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 const debug = require('debug')('torrent-discovery')
@@ -20058,7 +20201,7 @@ class Discovery extends EventEmitter {
 module.exports = Discovery
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":10,"bittorrent-dht/client":2,"bittorrent-lsd":2,"bittorrent-tracker/client":48,"debug":60,"events":5,"run-parallel":111}],129:[function(require,module,exports){
+},{"_process":10,"bittorrent-dht/client":2,"bittorrent-lsd":2,"bittorrent-tracker/client":49,"debug":61,"events":5,"run-parallel":112}],130:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! torrent-piece. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 const BLOCK_LENGTH = 1 << 14
@@ -20169,7 +20312,7 @@ Object.defineProperty(Piece, 'BLOCK_LENGTH', { value: BLOCK_LENGTH })
 module.exports = Piece
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3}],130:[function(require,module,exports){
+},{"buffer":3}],131:[function(require,module,exports){
 (function (Buffer){(function (){
 /**
  * Convert a typed array to a Buffer without a copy
@@ -20198,7 +20341,7 @@ module.exports = function typedarrayToBuffer (arr) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":3,"is-typedarray":70}],131:[function(require,module,exports){
+},{"buffer":3,"is-typedarray":71}],132:[function(require,module,exports){
 var bufferAlloc = require('buffer-alloc')
 
 var UINT_32_MAX = Math.pow(2, 32)
@@ -20231,7 +20374,7 @@ exports.decode = function (buf, offset) {
 exports.encode.bytes = 8
 exports.decode.bytes = 8
 
-},{"buffer-alloc":55}],132:[function(require,module,exports){
+},{"buffer-alloc":56}],133:[function(require,module,exports){
 module.exports = remove
 
 function remove (arr, i) {
@@ -20245,7 +20388,7 @@ function remove (arr, i) {
   return last
 }
 
-},{}],133:[function(require,module,exports){
+},{}],134:[function(require,module,exports){
 (function (Buffer){(function (){
 /*! ut_metadata. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 const { EventEmitter } = require('events')
@@ -20493,9 +20636,9 @@ module.exports = metadata => {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"bencode":43,"bitfield":46,"buffer":3,"debug":60,"events":5,"simple-sha1":117}],134:[function(require,module,exports){
+},{"bencode":44,"bitfield":47,"buffer":3,"debug":61,"events":5,"simple-sha1":118}],135:[function(require,module,exports){
 arguments[4][38][0].apply(exports,arguments)
-},{"dup":38}],135:[function(require,module,exports){
+},{"dup":38}],136:[function(require,module,exports){
 (function (Buffer){(function (){
 const bs = require('binary-search')
 const EventEmitter = require('events')
@@ -20975,7 +21118,7 @@ const MIN_FRAGMENT_DURATION = 1 // second
 module.exports = MP4Remuxer
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"binary-search":45,"buffer":3,"events":5,"mp4-box-encoding":78,"mp4-stream":81,"range-slice-stream":92}],136:[function(require,module,exports){
+},{"binary-search":46,"buffer":3,"events":5,"mp4-box-encoding":79,"mp4-stream":82,"range-slice-stream":93}],137:[function(require,module,exports){
 const MediaElementWrapper = require('mediasource')
 const pump = require('pump')
 
@@ -21103,7 +21246,7 @@ VideoStream.prototype = {
 
 module.exports = VideoStream
 
-},{"./mp4-remuxer":135,"mediasource":74,"pump":88}],137:[function(require,module,exports){
+},{"./mp4-remuxer":136,"mediasource":75,"pump":89}],138:[function(require,module,exports){
 (function (global,Buffer){(function (){
 /*! webtorrent. MIT License. WebTorrent LLC <https://webtorrent.io/opensource> */
 /* global FileList */
@@ -21559,7 +21702,7 @@ function isFileList (obj) {
 module.exports = WebTorrent
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./lib/conn-pool":2,"./lib/torrent":142,"./package.json":144,"bittorrent-dht/client":2,"buffer":3,"create-torrent":59,"debug":60,"events":5,"load-ip-set":2,"parse-torrent":86,"path":9,"queue-microtask":89,"randombytes":91,"run-parallel":111,"simple-concat":114,"simple-peer":116,"speedometer":120}],138:[function(require,module,exports){
+},{"./lib/conn-pool":2,"./lib/torrent":143,"./package.json":145,"bittorrent-dht/client":2,"buffer":3,"create-torrent":60,"debug":61,"events":5,"load-ip-set":2,"parse-torrent":87,"path":9,"queue-microtask":90,"randombytes":92,"run-parallel":112,"simple-concat":115,"simple-peer":117,"speedometer":121}],139:[function(require,module,exports){
 const debug = require('debug')('webtorrent:file-stream')
 const stream = require('readable-stream')
 
@@ -21667,7 +21810,7 @@ class FileStream extends stream.Readable {
 
 module.exports = FileStream
 
-},{"debug":60,"readable-stream":107}],139:[function(require,module,exports){
+},{"debug":61,"readable-stream":108}],140:[function(require,module,exports){
 const { EventEmitter } = require('events')
 const { PassThrough } = require('readable-stream')
 const eos = require('end-of-stream')
@@ -21829,7 +21972,7 @@ class File extends EventEmitter {
 
 module.exports = File
 
-},{"./file-stream":138,"end-of-stream":63,"events":5,"path":9,"queue-microtask":89,"readable-stream":107,"render-media":108,"stream-to-blob":122,"stream-to-blob-url":121,"stream-with-known-length-to-buffer":123}],140:[function(require,module,exports){
+},{"./file-stream":139,"end-of-stream":64,"events":5,"path":9,"queue-microtask":90,"readable-stream":108,"render-media":109,"stream-to-blob":123,"stream-to-blob-url":122,"stream-with-known-length-to-buffer":124}],141:[function(require,module,exports){
 const arrayRemove = require('unordered-array-remove')
 const debug = require('debug')('webtorrent:peer')
 const Wire = require('bittorrent-protocol')
@@ -22112,7 +22255,7 @@ class Peer {
   }
 }
 
-},{"bittorrent-protocol":47,"debug":60,"unordered-array-remove":132}],141:[function(require,module,exports){
+},{"bittorrent-protocol":48,"debug":61,"unordered-array-remove":133}],142:[function(require,module,exports){
 
 /**
  * Mapping of torrent pieces to their respective availability in the torrent swarm. Used
@@ -22222,7 +22365,7 @@ class RarityMap {
 
 module.exports = RarityMap
 
-},{}],142:[function(require,module,exports){
+},{}],143:[function(require,module,exports){
 (function (process,global){(function (){
 /* global Blob */
 
@@ -24059,7 +24202,7 @@ function noop () {}
 module.exports = Torrent
 
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../package.json":144,"./file":139,"./peer":140,"./rarity-map":141,"./server":2,"./webconn":143,"_process":10,"addr-to-ip-port":40,"bitfield":46,"chunk-store-stream/write":57,"cpus":58,"debug":60,"events":5,"fs":2,"fs-chunk-store":75,"immediate-chunk-store":67,"lt_donthave":72,"multistream":83,"net":2,"os":2,"parse-torrent":86,"path":9,"pump":88,"queue-microtask":89,"random-iterate":90,"run-parallel":111,"run-parallel-limit":110,"simple-get":115,"simple-sha1":117,"speedometer":120,"torrent-discovery":128,"torrent-piece":129,"ut_metadata":133,"ut_pex":2,"utp-native":2}],143:[function(require,module,exports){
+},{"../package.json":145,"./file":140,"./peer":141,"./rarity-map":142,"./server":2,"./webconn":144,"_process":10,"addr-to-ip-port":41,"bitfield":47,"chunk-store-stream/write":58,"cpus":59,"debug":61,"events":5,"fs":2,"fs-chunk-store":76,"immediate-chunk-store":68,"lt_donthave":73,"multistream":84,"net":2,"os":2,"parse-torrent":87,"path":9,"pump":89,"queue-microtask":90,"random-iterate":91,"run-parallel":112,"run-parallel-limit":111,"simple-get":116,"simple-sha1":118,"speedometer":121,"torrent-discovery":129,"torrent-piece":130,"ut_metadata":134,"ut_pex":2,"utp-native":2}],144:[function(require,module,exports){
 (function (Buffer){(function (){
 const BitField = require('bitfield').default
 const debug = require('debug')('webtorrent:webconn')
@@ -24281,11 +24424,11 @@ class WebConn extends Wire {
 module.exports = WebConn
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../package.json":144,"bitfield":46,"bittorrent-protocol":47,"buffer":3,"debug":60,"lt_donthave":72,"simple-get":115,"simple-sha1":117}],144:[function(require,module,exports){
+},{"../package.json":145,"bitfield":47,"bittorrent-protocol":48,"buffer":3,"debug":61,"lt_donthave":73,"simple-get":116,"simple-sha1":118}],145:[function(require,module,exports){
 module.exports={
   "version": "0.117.0"
 }
-},{}],145:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 // Returns a wrapper function that returns a wrapped callback
 // The wrapper function should do some stuff, and return a
 // presumably different callback function.
@@ -24320,102 +24463,4 @@ function wrappy (fn, cb) {
   }
 }
 
-},{}],146:[function(require,module,exports){
-const dragDrop = require('drag-drop')
-const WebTorrent = require('webtorrent')
-
- 
-
- 
-
- 
-
-
-if (WebTorrent.WEBRTC_SUPPORT) {
-  console.log("WebRTC Supported")
-} else {
-  console.log("WebRTC Not Supported")
-}
-
- 
-
- 
-
- 
-
-
-var client = new WebTorrent()
-
-
-// When user drops files on the browser, create a new torrent and start seeding it!
-dragDrop('body', function (files) {
-  client.seed(files, function (torrent) {
-    console.log('Client is seeding ' + torrent.magnetURI)
-   
-    torrent.files[0].appendTo('body')
-  })
-})
- 
-
-      client.on('error', function (err) {
-        console.error('ERROR: ' + err.message)
-      })
-
- 
-
-      document.querySelector('form').addEventListener('submit', function (e) {
-        e.preventDefault() // Prevent page refresh
-
- 
-
-        var torrentId = document.querySelector('form input[name=torrentId]').value
-        log('Adding ' + torrentId)
-        client.add(torrentId, onTorrent)
-      })
-
- 
-
-      function onTorrent (torrent) {
-        log('Got torrent metadata!')
-        log(
-          'Torrent info hash: ' + torrent.infoHash + ' ' +
-          '<a href="' + torrent.magnetURI + '" target="_blank">[Magnet URI]</a> ' +
-          '<a href="' + torrent.torrentFileBlobURL + '" target="_blank" download="' + torrent.name + '.torrent">[Download .torrent]</a>'
-        )
-
- 
-
-        // Print out progress every 5 seconds
-        var interval = setInterval(function () {
-          log('Progress: ' + (torrent.progress * 100).toFixed(1) + '%')
-        }, 5000)
-
- 
-
-        torrent.on('done', function () {
-          log('Progress: 100%')
-          clearInterval(interval)
-        })
-
- 
-
-        // Render all files into to the page
-        torrent.files.forEach(function (file) {
-          file.appendTo('.log')
-          log('(Blob URLs only work if the file is loaded from a server. "http//localhost" works. "file://" does not.)')
-          file.getBlobURL(function (err, url) {
-            if (err) return log(err.message)
-            log('File done.')
-            log('<a href="' + url + '">Download full file: ' + file.name + '</a>')
-          })
-        })
-      }
-
- 
-
-      function log (str) {
-        var p = document.createElement('p')
-        p.innerHTML = str
-        document.querySelector('.log').appendChild(p)
-      }
-},{"drag-drop":62,"webtorrent":137}]},{},[146]);
+},{}]},{},[40]);
