@@ -9136,6 +9136,7 @@ const dragDrop = require('drag-drop')
 const WebTorrent = require('webtorrent')
 
 
+
 if (WebTorrent.WEBRTC_SUPPORT) {
   console.log("WebRTC Supported")
 } else {
@@ -9158,46 +9159,52 @@ dragDrop(document.getElementById("drop_zone"), function (files) {
 	displayUri(torrent.magnetURI)
 	
 	addVideo(torrent.files[0])
-	//torrent.files[0].appendTo('body')
   })
 })
 
 document.querySelector('form').addEventListener('submit', function (e) {
     e.preventDefault() // Prevent page refresh
-
+	
     var torrentId = document.querySelector('form input[name=torrentId]').value
-    //log('Adding ' + torrentId)
+    
     client.add(torrentId, onTorrent)
 	
 })
 
+var scrolled = false
+
+const data = document.querySelector('.data')
+
+function updateData(str) {
+	data.innerHTML = str
+}
+
 function onTorrent (torrent) {
 		
-		
-/*log('Got torrent metadata!')
-log(
-    'Torrent info hash: ' + torrent.infoHash + ' ' +
-    '<a href="' + torrent.magnetURI + '" target="_blank">[Magnet URI]</a> ' +
-    '<a href="' + torrent.torrentFileBlobURL + '" target="_blank" download="' + torrent.name + '.torrent">[Download .torrent]</a>'
-    )*/
+	var dataInterval = setInterval(function () {
+         updateData('<b>Download Progress: </b>' + (torrent.progress * 100).toFixed(1) + '%<br>' + 
+		 "There are " + torrent.numPeers + " peers<br>" +
+		 prettyBytes(torrent.uploaded) + " have been uploaded to peers<br>" +
+		 prettyBytes(torrent.downloaded) + " have been received from peers<br>" +
+		 "<b>Upload speed: </b>" + prettyBytes(torrent.uploadSpeed) + 
+		 "<br><b>Download speed: </b>" + prettyBytes(torrent.downloadSpeed) + "/s" + 
+		 "<br><b>Seed ratio (uploaded/downloaded): </b>" + (torrent.ratio*100).toFixed(1)
+		 )
+    }, 500)
 	
 	
-	// Print out progress every 5 seconds
-	var interval = setInterval(function () {
-         displayProgress('Progress: ' + (torrent.progress * 100).toFixed(1) + '%')
-		 move()
-    }, 5000)
+	torrent.on('download', function () {
+		if(!scrolled){window.scrollBy(0, 1920)
+	scrolled = true}})
+
 
     torrent.on('done', function () {
 		displayProgress("Done")
-      //  log('Progress: 100%')
+
         clearInterval(interval)
     })
       // Render all files into to the page
 		
-	torrent.on('wire', function () {
-		displayPeers("There are " + torrent.numPeers + " peers")
-	})
 	
 		
 	var file = torrent.files.find(function(file) {
@@ -9207,22 +9214,16 @@ log(
 	
 	
 	addVideo(file)
-	//file.appendTo('body')
 	
 	
 }
 	  
 function displayUri(str) {
 	var p = document.createElement('p')
-	p.innerHTML = str
+	p.innerHTML = "<b>Copy URI and send to a potential peer:</b><br>" + str
 	document.querySelector('.uri').appendChild(p)
 }
 
-function displayProgress(str) {
-	var p = document.createElement('p')
-	p.innerHTML = str
-	document.querySelector('.progress').appendChild(p)
-}
 
 function displayTorrentData(str) {
 	var p = document.createElement('p')
@@ -9230,38 +9231,15 @@ function displayTorrentData(str) {
 	document.querySelector('.torrentData').appendChild(p)
 }
 
-function displayPeers(str) {
-	var p = document.createElement('p')
-	p.innerHTML = str
-	document.querySelector('.peers').appendChild(p)
-}
 
 
-function move() {
-            if ((torrent.progress*100).toFixed(1) == 0) {
-                //i = 1;
-                var elem = document.getElementById("myBar");
-                var width = 1;
-                var id = setInterval(frame, 10);
-                function frame() {
-                  if (width >= 100) {
-                      clearInterval(id);
-                      i = 0;
-                  } else {
-                      //width++;
-                      elem.style.width = width + "%";
-                  }
-                }
-            }
-        }
-		
 var isVideo = false
 		
 function addVideo(file){
 	if(!isVideo){
 		displayTorrentData('Now Playing "' + file.name +
 		'"')
-		displayTorrentData("Refresh page to play new video.")
+		displayTorrentData("Refresh page to download or upload new video.")
 		file.appendTo('body')
 		isVideo = true
 		
@@ -9273,6 +9251,16 @@ function addVideo(file){
 document.getElementById("inner-switch").onclick = function() {
         var element = document.body;
          element.classList.toggle("dark-mode");
+      }
+	  
+function prettyBytes(num) {
+        var exponent, unit, neg = num < 0, units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+        if (neg) num = -num
+        if (num < 1) return (neg ? '-' : '') + num + ' B'
+        exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1)
+        num = Number((num / Math.pow(1000, exponent)).toFixed(2))
+        unit = units[exponent]
+        return (neg ? '-' : '') + num + ' ' + unit
       }
 },{"drag-drop":63,"webtorrent":138}],41:[function(require,module,exports){
 const ADDR_RE = /^\[?([^\]]+)\]?:(\d+)$/ // ipv4/ipv6/hostname + port
