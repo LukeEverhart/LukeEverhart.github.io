@@ -17,23 +17,23 @@ client.on('error', function (err) {
 })
 
 
-// When user drops files on the browser, create a new torrent and start seeding it!
+// When user drops files on the browser, create a new torrent and start seeding it
 dragDrop(document.getElementById("drop_zone"), function (files) {
+	// webtorrent method to seed new torrent
   client.seed(files, function (torrent) {
-    console.log('Client is seeding ' + torrent.magnetURI)
 
-	displayUri(torrent.magnetURI)
+	displayUri(torrent.magnetURI) // display magnetURI
 	
-	addVideo(torrent.files[0])
+	addVideo(torrent.files[0]) // append video to html body
   })
 })
 
 document.querySelector('form').addEventListener('submit', function (e) {
     e.preventDefault() // Prevent page refresh
 	
-    var torrentId = document.querySelector('form input[name=torrentId]').value
+    var torrentId = document.querySelector('form input[name=torrentId]').value // Input magnet link with html form
     
-    client.add(torrentId, onTorrent)
+    client.add(torrentId, onTorrent) // WebTorrent method to download torrent
 	
 })
 
@@ -46,7 +46,9 @@ function updateData(str) {
 }
 
 function onTorrent (torrent) {
-		
+	
+	
+	// Torrent data displayed in a readable manner
 	var dataInterval = setInterval(function () {
          updateData('<b>Download Progress: </b>' + (torrent.progress * 100).toFixed(1) + '%<br>' + 
 		 "There are " + torrent.numPeers + " peers<br>" +
@@ -56,7 +58,7 @@ function onTorrent (torrent) {
 		 "<br><b>Download speed: </b>" + prettyBytes(torrent.downloadSpeed) + "/s" + 
 		 "<br><b>Seed ratio (uploaded/downloaded): </b>" + (torrent.ratio*100).toFixed(1)
 		 )
-    }, 500)
+    }, 500) // update twice a second
 	
 	
 	torrent.on('download', function () {
