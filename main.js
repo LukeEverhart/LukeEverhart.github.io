@@ -2,7 +2,8 @@ const dragDrop = require('drag-drop')
 const WebTorrent = require('webtorrent')
 
 
-
+// Check if browser has WebRTC support. WebTorrent won't work without it.
+// Most browsers have this.
 if (WebTorrent.WEBRTC_SUPPORT) {
   console.log("WebRTC Supported")
 } else {
@@ -10,8 +11,10 @@ if (WebTorrent.WEBRTC_SUPPORT) {
 }
 
 
-var client = new WebTorrent()
+var client = new WebTorrent() // WebTorrent instance
 
+
+// Quick error check
 client.on('error', function (err) {
     console.error('ERROR: ' + err.message)
 })
@@ -41,14 +44,12 @@ var scrolled = false
 
 const data = document.querySelector('.data')
 
-function updateData(str) {
-	data.innerHTML = str
-}
+
 
 function onTorrent (torrent) {
 	
 	
-	// Torrent data displayed in a readable manner
+	// Torrent data displayed in a readable manner using WebTorrent's torrent API
 	var dataInterval = setInterval(function () {
          updateData('<b>Download Progress: </b>' + (torrent.progress * 100).toFixed(1) + '%<br>' + 
 		 "There are " + torrent.numPeers + " peers<br>" +
@@ -61,6 +62,8 @@ function onTorrent (torrent) {
     }, 500) // update twice a second
 	
 	
+	
+	// on download starting, page scrolls to bottom
 	torrent.on('download', function () {
 		if(!scrolled){window.scrollBy(0, 1920)
 	scrolled = true}})
@@ -71,21 +74,23 @@ function onTorrent (torrent) {
 
         clearInterval(interval)
     })
-      // Render all files into to the page
-		
 	
-		
+	
+	
+    // Render mp4 into to the page
 	var file = torrent.files.find(function(file) {
 		
 		return file.name.endsWith('.mp4')
     })
 	
 	
-	addVideo(file)
+	addVideo(file) //append video to page
 	
 	
 }
 	  
+	  
+// Functions to append data to different html nodes  
 function displayUri(str) {
 	var p = document.createElement('p')
 	p.innerHTML = "<b>Copy URI and send to a potential peer:</b><br>" + str
@@ -99,8 +104,12 @@ function displayTorrentData(str) {
 	document.querySelector('.torrentData').appendChild(p)
 }
 
+function updateData(str) {
+	data.innerHTML = str
+}
 
 
+// addVideo appends video to body. Won't append if there's already a video up
 var isVideo = false
 		
 function addVideo(file){
@@ -116,11 +125,14 @@ function addVideo(file){
 	
 }
 
+
+// dark mode
 document.getElementById("inner-switch").onclick = function() {
         var element = document.body;
          element.classList.toggle("dark-mode");
       }
-	  
+
+// function to beautify the torrent API calls. 234534 -> 23KB	  
 function prettyBytes(num) {
         var exponent, unit, neg = num < 0, units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
         if (neg) num = -num
